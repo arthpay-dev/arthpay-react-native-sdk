@@ -1,6 +1,6 @@
 {
   "name": "arthpay-sdk",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "description": "arthpay SDK",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",
@@ -52,14 +52,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ra-lgt/arthpay-sdk.git"
+    "url": "git+https://github.com/arthpay-dev/arthpay-react-native-sdk.git"
   },
-  "author": "ra-lgt <raviajay9344@gmail.com> (https://github.com/ra-lgt)",
+  "author": "arthpay-dev <support@arthpay.com> (https://github.com/arthpay-dev)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ra-lgt/arthpay-sdk/issues"
+    "url": "https://github.com/arthpay-dev/arthpay-react-native-sdk/issues"
   },
-  "homepage": "https://github.com/ra-lgt/arthpay-sdk#readme",
+  "homepage": "https://github.com/arthpay-dev/arthpay-react-native-sdk#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

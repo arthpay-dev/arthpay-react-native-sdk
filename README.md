@@ -1,5 +1,3 @@
-Sure! Here's a detailed `README.md` for your project using the `arthpay-sdk` for integrating a payment gateway in your React Native app:
-
 ```markdown
 # ArthPay SDK Integration for React Native
 
@@ -70,7 +68,7 @@ const App = () => {
   useEffect(() => {
     (async () => {
       // Initialize ArthPay SDK with your merchant credentials
-      const arthpay = new ArthPayMerchant("AP_DEV_EBxkdAvj06poKqDAsLEjHsiVVh8tZKxctfFTiT5a0Dc", "4f11mV8v5I6aYHgO4g72Rg==")
+      const arthpay = new ArthPayMerchant([CLIENT_ID], [CLIENT_SECRET])
 
       // Create order info
       const order_info = new OrderModel()
@@ -90,7 +88,7 @@ const App = () => {
       customerDetails.setChMobile("+919876543210");
 
       // Create order request
-      const orderRequest = new CreateOrderRequest(customerDetails, order_info, "https://google.com")
+      const orderRequest = new CreateOrderRequest(customerDetails, order_info, [REDIRECTION_URL])
 
       // Fetch the payment link
       let link = await arthpay.createOrder(orderRequest)
