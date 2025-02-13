@@ -17,11 +17,11 @@ const App = () => {
       customerDetails.setFirstName("John");
       customerDetails.setLastName("Doe");
       customerDetails.setChAddrStreet("John Nagar Road");
-      customerDetails.setChAddrCity("Mumbai");
+      customerDetails.setChAddrCity("Mulund");
       customerDetails.setChAddrState("Maharashtra");
-      customerDetails.setChAddrZip("400001");
+      customerDetails.setChAddrZip("4000001");
       customerDetails.setChEmail("support@arthpay.com");
-      customerDetails.setChMobile("+919999999999");
+      customerDetails.setChMobile("+919876543210");
 
       const orderRequest = new CreateOrderRequest(customerDetails, order_info, [REDIRECTION_URL])
 
