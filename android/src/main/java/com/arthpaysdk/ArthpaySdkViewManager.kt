@@ -70,17 +70,22 @@ class ArthpaySdkViewManager : SimpleViewManager<WebView>() {
                         val cleanedTxnData = URLDecoder.decode(txnDataEncoded, "UTF-8")
                         val decoded = String(Base64.decode(cleanedTxnData, Base64.DEFAULT))
                         val json = JSONObject(decoded)
-                        val status = json.optString("status")
 
-                        when (status) {
-                            "02" -> Toast.makeText(reactContext, "Payment Successful!", Toast.LENGTH_SHORT).show()
-                            "01", "00", "FAILED", "" -> Toast.makeText(reactContext, "Payment Cancelled or Failed.", Toast.LENGTH_SHORT).show()
-                            else -> Toast.makeText(reactContext, "Unknown payment status: $status", Toast.LENGTH_SHORT).show()
+                        val status = json.optString("status")
+                        val txnId = json.optString("txnId")
+                        val approvalRef = json.optString("approvalRef")
+                        val message = json.optString("message")
+
+                        // Stricter payment success check
+                        if (status == "02" && (!txnId.isNullOrEmpty() || !approvalRef.isNullOrEmpty())) {
+                            Toast.makeText(reactContext, "Payment Successful!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(reactContext, "Payment Cancelled or Failed.", Toast.LENGTH_SHORT).show()
                         }
 
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        Toast.makeText(reactContext, "Failed to decode payment response: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(reactContext, "Failed to decode txnData: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                     }
                     return false
                 }
@@ -94,24 +99,12 @@ class ArthpaySdkViewManager : SimpleViewManager<WebView>() {
                 ) {
                     try {
                         var finalUrl = url
-
-                        // Do NOT convert tez:// to upi:// here — keep original schemes for package-specific checks
-
-                        val uri = Uri.parse(finalUrl)
-                        val builder = uri.buildUpon().clearQuery()
-                        uri.queryParameterNames.forEach { param ->
-                            uri.getQueryParameter(param)?.let { value ->
-                                builder.appendQueryParameter(param, value)
-                            }
-                        }
-                        val cleanedUrl = builder.build().toString()
-                        val cleanedUri = Uri.parse(cleanedUrl)
                         val pm = reactContext.packageManager
 
-                        // PhonePe
+                        // Handle PhonePe
                         if (url.startsWith("phonepe://")) {
                             val intent = Intent(Intent.ACTION_VIEW).apply {
-                                data = cleanedUri
+                                data = Uri.parse(finalUrl)
                                 setPackage("com.phonepe.app")
                                 addCategory(Intent.CATEGORY_BROWSABLE)
                                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -125,10 +118,10 @@ class ArthpaySdkViewManager : SimpleViewManager<WebView>() {
                             return true
                         }
 
-                        // Paytm
+                        // Handle Paytm
                         if (url.startsWith("paytmmp://")) {
                             val intent = Intent(Intent.ACTION_VIEW).apply {
-                                data = cleanedUri
+                                data = Uri.parse(finalUrl)
                                 setPackage("net.one97.paytm")
                                 addCategory(Intent.CATEGORY_BROWSABLE)
                                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -142,20 +135,17 @@ class ArthpaySdkViewManager : SimpleViewManager<WebView>() {
                             return true
                         }
 
-                        // GPay - We only replace tez://upi/pay with upi://pay for GPay, then use setPackage
-
+                        // Handle GPay (tez:// or intent:// or upi://pay)
                         if (url.startsWith("tez://upi/pay") || url.startsWith("intent://")) {
-                            // Fix tez:// scheme for GPay only here
-                            val gpayUrl = when {
+                            finalUrl = when {
                                 url.startsWith("tez://upi/pay") -> url.replaceFirst("tez://upi/pay", "upi://pay")
                                 url.startsWith("intent://") -> url.replaceFirst("intent://", "upi://pay")
                                 else -> url
                             }
-                            val gpayUri = Uri.parse(gpayUrl)
 
                             val intent = Intent(Intent.ACTION_VIEW).apply {
-                                data = gpayUri
-                                setPackage("com.google.android.apps.nbu.paisa.user") // GPay package
+                                data = Uri.parse(finalUrl)
+                                setPackage("com.google.android.apps.nbu.paisa.user")
                                 addCategory(Intent.CATEGORY_BROWSABLE)
                                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
                             }
@@ -169,10 +159,10 @@ class ArthpaySdkViewManager : SimpleViewManager<WebView>() {
                             return true
                         }
 
-                        // For other upi:// links without package, launch generic chooser
+                        // Generic UPI handler (chooser)
                         if (url.startsWith("upi://pay")) {
                             val intent = Intent(Intent.ACTION_VIEW).apply {
-                                data = cleanedUri
+                                data = Uri.parse(finalUrl)
                                 addCategory(Intent.CATEGORY_BROWSABLE)
                                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
                             }
