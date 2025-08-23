@@ -1,36 +1,86 @@
+import Foundation
+import WebKit
+import React
+
 @objc(ArthpaySdkViewManager)
 class ArthpaySdkViewManager: RCTViewManager {
-
-  override func view() -> (ArthpaySdkView) {
-    return ArthpaySdkView()
-  }
-
-  @objc override static func requiresMainQueueSetup() -> Bool {
-    return false
-  }
+    
+    override static func requiresMainQueueSetup() -> Bool {
+        return true
+    }
+    
+    override func view() -> UIView! {
+        return CustomWebView()
+    }
 }
 
-class ArthpaySdkView : UIView {
+class CustomWebView: UIView, WKNavigationDelegate {
+    private var webView: WKWebView!
 
-  @objc var color: String = "" {
-    didSet {
-      self.backgroundColor = hexStringToUIColor(hexColor: color)
+    @objc var source: NSString = "" {
+        didSet {
+            loadWebView(urlString: source as String)
+        }
     }
-  }
 
-  func hexStringToUIColor(hexColor: String) -> UIColor {
-    let stringScanner = Scanner(string: hexColor)
-
-    if(hexColor.hasPrefix("#")) {
-      stringScanner.scanLocation = 1
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupWebView()
     }
-    var color: UInt32 = 0
-    stringScanner.scanHexInt32(&color)
 
-    let r = CGFloat(Int(color >> 16) & 0x000000FF)
-    let g = CGFloat(Int(color >> 8) & 0x000000FF)
-    let b = CGFloat(Int(color) & 0x000000FF)
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupWebView()
+    }
 
-    return UIColor(red: r / 255.0, green: g / 255.0, blue: b / 255.0, alpha: 1)
-  }
+    private func setupWebView() {
+        let config = WKWebViewConfiguration()
+        webView = WKWebView(frame: self.bounds, configuration: config)
+        webView.navigationDelegate = self
+        webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        self.addSubview(webView)
+    }
+
+    private func loadWebView(urlString: String) {
+        guard let url = URL(string: urlString) else {
+            print("Invalid URL: \(urlString)")
+            return
+        }
+        DispatchQueue.main.async {
+            let request = URLRequest(url: url)
+            self.webView.load(request)
+        }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        webView.frame = self.bounds
+    }
+
+    // MARK: - WKNavigationDelegate (Handle UPI / Deep Links)
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
+                 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+
+        guard let url = navigationAction.request.url else {
+            decisionHandler(.allow)
+            return
+        }
+
+        let scheme = url.scheme?.lowercased() ?? ""
+        let upiSchemes = ["upi", "phonepe", "gpay", "tez", "paytmmp", "intent"]
+
+        if upiSchemes.contains(scheme) {
+            // Try opening via system
+            if UIApplication.shared.canOpenURL(url) {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            } else {
+                print("No app installed to handle UPI URL: \(url.absoluteString)")
+            }
+            decisionHandler(.cancel)
+            return
+        }
+
+        // Let normal HTTP/HTTPS requests proceed
+        decisionHandler(.allow)
+    }
 }
