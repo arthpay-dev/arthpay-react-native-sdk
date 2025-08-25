@@ -56,6 +56,40 @@ class CustomWebView: UIView, WKNavigationDelegate {
         super.layoutSubviews()
         webView.frame = self.bounds
     }
+func showToast(message: String, duration: Double = 2.0) {
+    let toastLabel = UILabel()
+    toastLabel.text = message
+    toastLabel.textColor = .white
+    toastLabel.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+    toastLabel.textAlignment = .center
+    toastLabel.font = UIFont.systemFont(ofSize: 14)
+    toastLabel.alpha = 0.0
+    toastLabel.numberOfLines = 0
+
+    let textSize = toastLabel.intrinsicContentSize
+    let padding: CGFloat = 16
+    let labelWidth = min(self.frame.width - 2 * padding, textSize.width + padding)
+    let labelHeight = textSize.height + 20
+
+    toastLabel.frame = CGRect(x: (self.frame.width - labelWidth) / 2,
+                              y: self.frame.height - labelHeight - 40,
+                              width: labelWidth,
+                              height: labelHeight)
+    toastLabel.layer.cornerRadius = 10
+    toastLabel.clipsToBounds = true
+
+    self.addSubview(toastLabel)
+
+    UIView.animate(withDuration: 0.5, animations: {
+        toastLabel.alpha = 1.0
+    }) { _ in
+        UIView.animate(withDuration: 0.5, delay: duration, options: .curveEaseOut, animations: {
+            toastLabel.alpha = 0.0
+        }) { _ in
+            toastLabel.removeFromSuperview()
+        }
+    }
+}
 
     // MARK: - WKNavigationDelegate (Handle UPI / Deep Links)
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
@@ -74,7 +108,9 @@ class CustomWebView: UIView, WKNavigationDelegate {
             if UIApplication.shared.canOpenURL(url) {
                 UIApplication.shared.open(url, options: [:], completionHandler: nil)
             } else {
-                print("No app installed to handle UPI URL: \(url.absoluteString)")
+               DispatchQueue.main.async {
+        self.showToast(message: "No app installed to handle UPI URL")
+    }
             }
             decisionHandler(.cancel)
             return
