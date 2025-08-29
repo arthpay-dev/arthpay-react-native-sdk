@@ -6,7 +6,10 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.util.Base64
+import android.view.LayoutInflater
+import android.view.View
 import android.webkit.*
+import android.widget.TextView
 import android.widget.Toast
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
@@ -30,22 +33,36 @@ class ArthpaySdkViewManager : SimpleViewManager<WebView>() {
             CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
         }
 
-        webView.webChromeClient = object : WebChromeClient() {
-            override fun onJsConfirm(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
-                val context = view?.context
-                if (context != null && result != null) {
-                    AlertDialog.Builder(context)
-                        .setMessage(message)
-                        .setCancelable(false)
-                        .setPositiveButton("OK") { _, _ -> result.confirm() }
-                        .setNegativeButton("Cancel") { _, _ -> result.cancel() }
-                        .setOnCancelListener { result.cancel() }
-                        .show()
-                    return true
-                }
-                return super.onJsConfirm(view, url, message, result)
+   webView.webChromeClient = object : WebChromeClient() {
+    override fun onJsConfirm(
+        view: WebView?,
+        url: String?,
+        message: String?,
+        result: JsResult?
+    ): Boolean {
+        val context = view?.context
+        if (context != null && result != null) {
+            // If the confirm dialog message is related to cancel action,
+            // show custom dialog to ask user to confirm cancellation.
+            if (message?.contains("cancel", ignoreCase = true) == true) {
+                AlertDialog.Builder(context)
+                    .setMessage("Are you sure you want to cancel?")
+                    .setPositiveButton("OK") { _, _ -> result.confirm() }
+                    .setNegativeButton("Cancel") { _, _ -> result.cancel() }
+                    .setOnCancelListener { result.cancel() }
+                    .show()
+                return true
+            } else {
+                // For other confirm dialogs, automatically confirm silently
+                result.confirm()
+                return true
             }
         }
+        return super.onJsConfirm(view, url, message, result)
+    }
+}
+
+
 
         webView.webViewClient = object : WebViewClient() {
 
@@ -76,16 +93,15 @@ class ArthpaySdkViewManager : SimpleViewManager<WebView>() {
                         val approvalRef = json.optString("approvalRef")
                         val message = json.optString("message")
 
-                        // Stricter payment success check
                         if (status == "02" && (!txnId.isNullOrEmpty() || !approvalRef.isNullOrEmpty())) {
-                            Toast.makeText(reactContext, "Payment Successful!", Toast.LENGTH_SHORT).show()
+                            showCustomToast(reactContext, "Payment Successful!")
                         } else {
-                            Toast.makeText(reactContext, "Payment Cancelled or Failed.", Toast.LENGTH_SHORT).show()
+                            showCustomToast(reactContext, "Payment Cancelled or Failed.")
                         }
 
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        Toast.makeText(reactContext, "Failed to decode txnData: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                        showCustomToast(reactContext, "Failed to decode txnData: ${e.localizedMessage}")
                     }
                     return false
                 }
@@ -101,7 +117,6 @@ class ArthpaySdkViewManager : SimpleViewManager<WebView>() {
                         var finalUrl = url
                         val pm = reactContext.packageManager
 
-                        // Handle PhonePe
                         if (url.startsWith("phonepe://")) {
                             val intent = Intent(Intent.ACTION_VIEW).apply {
                                 data = Uri.parse(finalUrl)
@@ -113,12 +128,11 @@ class ArthpaySdkViewManager : SimpleViewManager<WebView>() {
                             if (resolveInfo != null) {
                                 reactContext.startActivity(intent)
                             } else {
-                                Toast.makeText(reactContext, "PhonePe not found on device.", Toast.LENGTH_SHORT).show()
+                                showCustomToast(reactContext, "PhonePe not found on device.")
                             }
                             return true
                         }
 
-                        // Handle Paytm
                         if (url.startsWith("paytmmp://")) {
                             val intent = Intent(Intent.ACTION_VIEW).apply {
                                 data = Uri.parse(finalUrl)
@@ -130,12 +144,11 @@ class ArthpaySdkViewManager : SimpleViewManager<WebView>() {
                             if (resolveInfo != null) {
                                 reactContext.startActivity(intent)
                             } else {
-                                Toast.makeText(reactContext, "Paytm not found on device.", Toast.LENGTH_SHORT).show()
+                                showCustomToast(reactContext, "Paytm not found on device.")
                             }
                             return true
                         }
 
-                        // Handle GPay (tez:// or intent:// or upi://pay)
                         if (url.startsWith("tez://upi/pay") || url.startsWith("intent://")) {
                             finalUrl = when {
                                 url.startsWith("tez://upi/pay") -> url.replaceFirst("tez://upi/pay", "upi://pay")
@@ -154,12 +167,11 @@ class ArthpaySdkViewManager : SimpleViewManager<WebView>() {
                             if (resolveInfo != null) {
                                 reactContext.startActivity(intent)
                             } else {
-                                Toast.makeText(reactContext, "GPay app is not installed.", Toast.LENGTH_SHORT).show()
+                                showCustomToast(reactContext, "GPay app is not installed.")
                             }
                             return true
                         }
 
-                        // Generic UPI handler (chooser)
                         if (url.startsWith("upi://pay")) {
                             val intent = Intent(Intent.ACTION_VIEW).apply {
                                 data = Uri.parse(finalUrl)
@@ -170,12 +182,12 @@ class ArthpaySdkViewManager : SimpleViewManager<WebView>() {
                             return true
                         }
 
-                        Toast.makeText(reactContext, "No supported UPI app found.", Toast.LENGTH_SHORT).show()
+                        showCustomToast(reactContext, "No supported UPI app found.")
                         return true
 
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        Toast.makeText(reactContext, "UPI link failed: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                        showCustomToast(reactContext, "UPI link failed: ${e.localizedMessage}")
                         return true
                     }
                 }
@@ -192,5 +204,19 @@ class ArthpaySdkViewManager : SimpleViewManager<WebView>() {
         source?.let {
             webView.loadUrl(it)
         }
+    }
+
+    private fun showCustomToast(context: ThemedReactContext, message: String) {
+        val inflater = LayoutInflater.from(context)
+        val toastLayout: View = inflater.inflate(android.R.layout.simple_list_item_1, null)
+        val textView = toastLayout.findViewById<TextView>(android.R.id.text1)
+        textView.text = message
+ textView.setBackgroundColor(0xFF000000.toInt()) // Black background
+    textView.setTextColor(0xFFFFFFFF.toInt()) // White text
+    textView.setPadding(24, 16, 24, 16)
+        val toast = Toast(context)
+        toast.view = toastLayout
+        toast.duration = Toast.LENGTH_SHORT
+        toast.show()
     }
 }
