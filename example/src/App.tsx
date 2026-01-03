@@ -15,14 +15,14 @@ import {
   CreateOrderRequest,
   CustomerModel,
   OrderModel,
-  ArthpaySdkView
+  ArthpaySdkView,
 } from 'arthpay-sdk';
 
-const CLIENT_ID = "AP_DEV_79LNneDWVA8xXWwMa3rPbp42ki85b0EPIH2J2kAes";
-const CLIENT_SECRET = "Y/Ttg62Ut08ghSHVmOsQ/w==";
+const CLIENT_ID = 'AP_DEV_PHu5DSHqoHKVxNdUdkNnFdNG1fMYG58jfgLaAPgU2w';
+const CLIENT_SECRET = 'Wkfayc7HUKywVrKXiUnvzw==';
 
 const App = () => {
-  const [link, setLink] = useState("");
+  const [link, setLink] = useState('');
   const [showWebView, setShowWebView] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -32,51 +32,55 @@ const App = () => {
       const arthpay = new ArthPayMerchant(CLIENT_ID, CLIENT_SECRET);
 
       const order_info = new OrderModel();
-      order_info.setOrderInfo("1231231");
-      order_info.setCurrency("INR");
-      order_info.setAmount("8000");
+      order_info.setOrderInfo('1231231');
+      order_info.setCurrency('INR');
+      order_info.setAmount('100');
 
       const customerDetails = new CustomerModel();
-      customerDetails.setFirstName("John");
-      customerDetails.setLastName("Doe");
-      customerDetails.setChAddrStreet("John Nagar Road");
-      customerDetails.setChAddrCity("Mulund");
-      customerDetails.setChAddrState("Maharashtra");
-      customerDetails.setChAddrZip("4000001");
-      customerDetails.setChEmail("support@arthpay.com");
-      customerDetails.setChMobile("+919876543210");
+      customerDetails.setFirstName('John');
+      customerDetails.setLastName('Doe');
+      customerDetails.setChAddrStreet('John Nagar Road');
+      customerDetails.setChAddrCity('Mulund');
+      customerDetails.setChAddrState('Maharashtra');
+      customerDetails.setChAddrZip('4000001');
+      customerDetails.setChEmail('support@arthpay.com');
+      customerDetails.setChMobile('+917276575604');
 
-      const orderRequest = new CreateOrderRequest(customerDetails, order_info, "");
+      const orderRequest = new CreateOrderRequest(
+        customerDetails,
+        order_info,
+        ''
+      );
 
       let response = await arthpay.createOrder(orderRequest);
-      console.log("response====================", response)
+      console.log('response====================', response);
       let parsedResponse = JSON.parse(response);
-      console.log("parsedResponse====================", parsedResponse)
+      console.log('parsedResponse====================', parsedResponse);
       const url = parsedResponse?.obj;
-      console.log("url====================", url)
+      console.log('url====================', url);
       if (url) {
         setLink(url);
         setShowWebView(true);
       }
     } catch (error) {
-      console.error("Error initiating payment:", error);
-      Alert.alert("Error", "Something went wrong while initiating the payment.");
+      console.error('Error initiating payment:', error);
+      Alert.alert(
+        'Error',
+        'Something went wrong while initiating the payment.'
+      );
     } finally {
       setLoading(false);
     }
   };
-useEffect(() => {
-  const sub = DeviceEventEmitter.addListener('ArthpaySdkEvent', (event) => {
-    if (event?.status === 'failed' || event?.status === 'unknown') {
-      setShowWebView(false); 
-    }
-  });
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('ArthpaySdkEvent', (event) => {
+      if (event?.status === 'failed' || event?.status === 'unknown') {
+        setShowWebView(false);
+      }
+    });
 
-  return () => sub.remove();
-}, []);
-
-
-
+    return () => sub.remove();
+  }, []);
 
   // const handleNavigation = (event: any) => {
   //   const url = event.url;
@@ -141,24 +145,25 @@ useEffect(() => {
   // };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#ebf1f7" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#ebf1f7' }}>
       {showWebView && link ? (
-        <ArthpaySdkView
-          source={link}
-          style={{ flex: 1 }}
-        />
+        <ArthpaySdkView source={link} style={{ flex: 1 }} />
       ) : (
-        <View style={{ flex: 1, justifyContent: "flex-end", marginBottom: 50, alignItems: "center" }}>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'flex-end',
+            marginBottom: 50,
+            alignItems: 'center',
+          }}
+        >
           <Image
             source={{
-              uri: "https://static.vecteezy.com/system/resources/thumbnails/012/487/870/small_2x/3d-icon-credit-card-mockup-floating-isolated-on-transparent-mobile-banking-and-online-payment-service-digital-marketing-e-commerce-withdraw-money-easy-shopping-cartoon-minimal-3d-render-png.png"
+              uri: 'https://static.vecteezy.com/system/resources/thumbnails/012/487/870/small_2x/3d-icon-credit-card-mockup-floating-isolated-on-transparent-mobile-banking-and-online-payment-service-digital-marketing-e-commerce-withdraw-money-easy-shopping-cartoon-minimal-3d-render-png.png',
             }}
-            style={{ resizeMode: "contain", width: "100%", height: "80%" }}
+            style={{ resizeMode: 'contain', width: '100%', height: '80%' }}
           />
-          <TouchableOpacity
-            onPress={paymentInitial}
-            style={styles.payButton}
-          >
+          <TouchableOpacity onPress={paymentInitial} style={styles.payButton}>
             {!loading ? (
               <Text style={styles.buttonText}>PAY</Text>
             ) : (
@@ -176,15 +181,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 24,
     fontWeight: '600',
-    letterSpacing: 4
+    letterSpacing: 4,
   },
   payButton: {
     width: 150,
-    backgroundColor: "#1974D2",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#1974D2',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 10,
-    borderRadius: 10
+    borderRadius: 10,
   },
   webView: {
     flex: 1,

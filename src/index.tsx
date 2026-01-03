@@ -26,8 +26,6 @@ export const ArthpaySdkView =
   UIManager.getViewManagerConfig(ComponentName) != null
     ? requireNativeComponent<ArthpaySdkProps>(ComponentName)
     : () => {
-      throw new Error(LINKING_ERROR);
-    };
-export {ArthPayMerchant,OrderModel,CustomerModel,CreateOrderRequest}
-
-
+        throw new Error(LINKING_ERROR);
+      };
+export { ArthPayMerchant, OrderModel, CustomerModel, CreateOrderRequest };
