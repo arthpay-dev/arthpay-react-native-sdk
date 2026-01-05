@@ -18,8 +18,8 @@ import {
   ArthpaySdkView,
 } from 'arthpay-sdk';
 
-const CLIENT_ID = 'AP_DEV_PHu5DSHqoHKVxNdUdkNnFdNG1fMYG58jfgLaAPgU2w';
-const CLIENT_SECRET = 'Wkfayc7HUKywVrKXiUnvzw==';
+const CLIENT_ID = '';
+const CLIENT_SECRET = '';
 
 const App = () => {
   const [link, setLink] = useState('');
@@ -53,11 +53,8 @@ const App = () => {
       );
 
       let response = await arthpay.createOrder(orderRequest);
-      console.log('response====================', response);
       let parsedResponse = JSON.parse(response);
-      console.log('parsedResponse====================', parsedResponse);
       const url = parsedResponse?.obj;
-      console.log('url====================', url);
       if (url) {
         setLink(url);
         setShowWebView(true);
