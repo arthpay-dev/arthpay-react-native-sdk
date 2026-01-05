@@ -1,4 +1,4 @@
-```markdown
+````markdown
 # ArthPay SDK Integration for React Native
 
 This project demonstrates how to integrate the ArthPay payment gateway SDK in a React Native application. The SDK allows you to create orders, set customer details, and interact with ArthPay's payment processing system to manage payments.
@@ -18,6 +18,7 @@ First, make sure that you have installed all necessary dependencies, including t
 ```bash
 npm install arthpay-sdk
 ```
+````
 
 ### 2. Set Up React Native Project
 
@@ -60,43 +61,50 @@ Here's the complete code for integrating ArthPay SDK in your React Native app:
 ```javascript
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { ArthPayMerchant, ArthpaySdkView, CreateOrderRequest, CustomerModel, OrderModel } from 'arthpay-sdk'
+import {
+  ArthPayMerchant,
+  ArthpaySdkView,
+  CreateOrderRequest,
+  CustomerModel,
+  OrderModel,
+} from 'arthpay-sdk';
 
 const App = () => {
-  const [link, setLink] = useState("")
+  const [link, setLink] = useState('');
 
   useEffect(() => {
     (async () => {
       // Initialize ArthPay SDK with your merchant credentials
-      const arthpay = new ArthPayMerchant([CLIENT_ID], [CLIENT_SECRET])
+      const arthpay = new ArthPayMerchant([CLIENT_ID], [CLIENT_SECRET]);
 
       // Create order info
-      const order_info = new OrderModel()
-      order_info.setOrderInfo("1231231")
-      order_info.setCurrency("INR")
-      order_info.setAmount("100")
+      const order_info = new OrderModel();
+      order_info.setOrderInfo('1231231');
+      order_info.setCurrency('INR');
+      order_info.setAmount('100');
 
       // Set customer details
-      const customerDetails = new CustomerModel()
-      customerDetails.setFirstName("John");
-      customerDetails.setLastName("Doe");
-      customerDetails.setChAddrStreet("John Nagar Road");
-      customerDetails.setChAddrCity("Mulund");
-      customerDetails.setChAddrState("Maharashtra");
-      customerDetails.setChAddrZip("4000001");
-      customerDetails.setChEmail("support@arthpay.com");
-      customerDetails.setChMobile("+919876543210");
+      const customerDetails = new CustomerModel();
+      customerDetails.setFirstName('John');
+      customerDetails.setLastName('Doe');
+      customerDetails.setChAddrStreet('John Nagar Road');
+      customerDetails.setChAddrCity('Mulund');
+      customerDetails.setChAddrState('Maharashtra');
+      customerDetails.setChAddrZip('4000001');
+      customerDetails.setChEmail('support@arthpay.com');
+      customerDetails.setChMobile('+919876543210');
 
       // Create order request
-      const orderRequest = new CreateOrderRequest(customerDetails, order_info, [REDIRECTION_URL])
+      const orderRequest = new CreateOrderRequest(customerDetails, order_info, [
+        REDIRECTION_URL,
+      ]);
 
       // Fetch the payment link
-      let link = await arthpay.createOrder(orderRequest)
-      link = JSON.parse(link)
-      setLink(link?.obj)
-
-    })()
-  }, [])
+      let link = await arthpay.createOrder(orderRequest);
+      link = JSON.parse(link);
+      setLink(link?.obj);
+    })();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -131,7 +139,6 @@ export default App;
 ## Configuration
 
 - **API Keys**: You must replace the placeholder values for your merchant credentials (`merchantId`, `apiKey`) in the code with the actual credentials provided by ArthPay.
-  
 - **Customer Details**: The customer details include the name, address, email, and mobile number. Ensure these are accurate and complete.
 
 - **Redirect URL**: The URL (`"https://google.com"` in the example) is the URL to which the user will be redirected after completing the payment.
@@ -142,11 +149,11 @@ To ensure smooth integration, you should handle possible errors in the API calls
 
 ```javascript
 try {
-  let link = await arthpay.createOrder(orderRequest)
-  link = JSON.parse(link)
-  setLink(link?.obj)
+  let link = await arthpay.createOrder(orderRequest);
+  link = JSON.parse(link);
+  setLink(link?.obj);
 } catch (error) {
-  console.error("Error creating order: ", error);
+  console.error('Error creating order: ', error);
   // Handle error (show error message, etc.)
 }
 ```

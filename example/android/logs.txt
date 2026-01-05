@@ -1,0 +1,88 @@
+> Task :gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors
+> Task :gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors
+> Task :gradle-plugin:shared:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:shared:compileJava NO-SOURCE
+> Task :gradle-plugin:shared:processResources NO-SOURCE
+> Task :gradle-plugin:shared:classes UP-TO-DATE
+> Task :gradle-plugin:shared:jar UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:settings-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:jar UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors
+> Task :gradle-plugin:react-native-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:react-native-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:jar UP-TO-DATE
+> Task :app:generateAutolinkingNewArchitectureFiles UP-TO-DATE
+> Task :app:generateAutolinkingPackageList UP-TO-DATE
+> Task :app:generateCodegenSchemaFromJavaScript SKIPPED
+> Task :app:generateCodegenArtifactsFromSchema SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:generateDebugBuildConfig
+> Task :arthpay-sdk:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :arthpay-sdk:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :arthpay-sdk:preBuild UP-TO-DATE
+> Task :arthpay-sdk:preDebugBuild UP-TO-DATE
+> Task :arthpay-sdk:writeDebugAarMetadata
+> Task :app:generateDebugResValues
+> Task :arthpay-sdk:generateDebugResValues
+> Task :arthpay-sdk:generateDebugResources
+> Task :arthpay-sdk:packageDebugResources
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:checkDebugAarMetadata
+> Task :app:packageDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:parseDebugLocalResources
+> Task :arthpay-sdk:extractDeepLinksDebug
+> Task :arthpay-sdk:compileDebugLibraryResources
+> Task :arthpay-sdk:checkKotlinGradlePluginConfigurationErrors
+
+> Task :arthpay-sdk:processDebugManifest
+package="com.arthpaysdk" found in source AndroidManifest.xml: /Users/chandrabhan.maurya/Documents/arthpay-react-native-sdk/android/src/main/AndroidManifestNew.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.arthpaysdk" from the source AndroidManifest.xml: /Users/chandrabhan.maurya/Documents/arthpay-react-native-sdk/android/src/main/AndroidManifestNew.xml.
+
+> Task :arthpay-sdk:parseDebugLocalResources
+> Task :arthpay-sdk:generateDebugBuildConfig
+> Task :app:mergeDebugResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:processDebugManifestForPackage
+> Task :arthpay-sdk:javaPreCompileDebug
+> Task :app:javaPreCompileDebug
+> Task :arthpay-sdk:generateDebugRFile
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :arthpay-sdk:mergeDebugShaders
+> Task :arthpay-sdk:compileDebugShaders NO-SOURCE
+> Task :arthpay-sdk:generateDebugAssets UP-TO-DATE
+> Task :arthpay-sdk:packageDebugAssets
+> Task :app:mergeDebugAssets
+> Task :app:compressDebugAssets
+> Task :app:desugarDebugFileDependencies
+> Task :app:checkDebugDuplicateClasses
+> Task :app:processDebugResources
+> Task :arthpay-sdk:compileDebugKotlin
+> Task :app:configureCMakeDebug[arm64-v8a]
+> Task :arthpay-sdk:compileDebugJavaWithJavac
+> Task :arthpay-sdk:processDebugJavaRes
+> Task :arthpay-sdk:bundleLibCompileToJarDebug
+> Task :arthpay-sdk:bundleLibRuntimeToJarDebug
+> Task :arthpay-sdk:bundleLibRuntimeToDirDebug
+
+> Task :app:compileDebugKotlin FAILED
+
+> Task :app:mergeExtDexDebug
+> Task :app:buildCMakeDebug[arm64-v8a]
+62 actionable tasks: 48 executed, 14 up-to-date

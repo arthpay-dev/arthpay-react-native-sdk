@@ -1,51 +1,222 @@
 package com.arthpaysdk
 
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import android.webkit.WebChromeClient
+import android.app.AlertDialog
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
-import android.webkit.CookieManager
+import android.util.Base64
+import android.view.LayoutInflater
+import android.view.View
+import android.webkit.*
+import android.widget.TextView
+import android.widget.Toast
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
+import org.json.JSONObject
+import java.net.URLDecoder
 
 class ArthpaySdkViewManager : SimpleViewManager<WebView>() {
 
     override fun getName() = "ArthpaySdkView"
 
-    // Create the WebView instance
     override fun createViewInstance(reactContext: ThemedReactContext): WebView {
         val webView = WebView(reactContext)
 
-        // Set WebView settings
         val webSettings = webView.settings
-        webSettings.javaScriptEnabled = true // Enable JavaScript
-        webSettings.domStorageEnabled = true // Enable DOM storage (localStorage)
+        webSettings.javaScriptEnabled = true
+        webSettings.domStorageEnabled = true
 
-        // Handle mixed content for HTTPS and HTTP
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            webSettings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            webSettings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
         }
 
-        // Handle cookies
-        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
+   webView.webChromeClient = object : WebChromeClient() {
+    override fun onJsConfirm(
+        view: WebView?,
+        url: String?,
+        message: String?,
+        result: JsResult?
+    ): Boolean {
+        val context = view?.context
+        if (context != null && result != null) {
+            // If the confirm dialog message is related to cancel action,
+            // show custom dialog to ask user to confirm cancellation.
+            if (message?.contains("cancel", ignoreCase = true) == true) {
+                AlertDialog.Builder(context)
+                    .setMessage("Are you sure you want to cancel?")
+                    .setPositiveButton("OK") { _, _ -> result.confirm() }
+                    .setNegativeButton("Cancel") { _, _ -> result.cancel() }
+                    .setOnCancelListener { result.cancel() }
+                    .show()
+                return true
+            } else {
+                // For other confirm dialogs, automatically confirm silently
+                result.confirm()
+                return true
+            }
+        }
+        return super.onJsConfirm(view, url, message, result)
+    }
+}
 
-        // Set WebViewClient to ensure links open inside the WebView
-        webView.webViewClient = WebViewClient()
 
-        // Optionally set a WebChromeClient for handling JavaScript alerts, etc.
-        webView.webChromeClient = WebChromeClient()
+
+        webView.webViewClient = object : WebViewClient() {
+
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                val url = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    request.url.toString()
+                } else {
+                    request.toString()
+                }
+                return handleUrl(url, reactContext)
+            }
+
+            @Deprecated("Deprecated in Java")
+            override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
+                return handleUrl(url, reactContext)
+            }
+
+            private fun handleUrl(url: String, reactContext: ThemedReactContext): Boolean {
+                if (url.contains("/ordercallback") && url.contains("txnData=")) {
+                    try {
+                        val txnDataEncoded = url.substringAfter("txnData=").substringBefore("&")
+                        val cleanedTxnData = URLDecoder.decode(txnDataEncoded, "UTF-8")
+                        val decoded = String(Base64.decode(cleanedTxnData, Base64.DEFAULT))
+                        val json = JSONObject(decoded)
+
+                        val status = json.optString("status")
+                        val txnId = json.optString("txnId")
+                        val approvalRef = json.optString("approvalRef")
+                        val message = json.optString("message")
+
+                        if (status == "02" && (!txnId.isNullOrEmpty() || !approvalRef.isNullOrEmpty())) {
+                            showCustomToast(reactContext, "Payment Successful!")
+                        } else {
+                            showCustomToast(reactContext, "Payment Cancelled or Failed.")
+                        }
+
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        showCustomToast(reactContext, "Failed to decode txnData: ${e.localizedMessage}")
+                    }
+                    return false
+                }
+
+                if (
+                    url.startsWith("upi://") ||
+                    url.startsWith("tez://") ||
+                    url.startsWith("intent://") ||
+                    url.startsWith("phonepe://") ||
+                    url.startsWith("paytmmp://")
+                ) {
+                    try {
+                        var finalUrl = url
+                        val pm = reactContext.packageManager
+
+                        if (url.startsWith("phonepe://")) {
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                data = Uri.parse(finalUrl)
+                                setPackage("com.phonepe.app")
+                                addCategory(Intent.CATEGORY_BROWSABLE)
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            val resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+                            if (resolveInfo != null) {
+                                reactContext.startActivity(intent)
+                            } else {
+                                showCustomToast(reactContext, "PhonePe not found on device.")
+                            }
+                            return true
+                        }
+
+                        if (url.startsWith("paytmmp://")) {
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                data = Uri.parse(finalUrl)
+                                setPackage("net.one97.paytm")
+                                addCategory(Intent.CATEGORY_BROWSABLE)
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            val resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+                            if (resolveInfo != null) {
+                                reactContext.startActivity(intent)
+                            } else {
+                                showCustomToast(reactContext, "Paytm not found on device.")
+                            }
+                            return true
+                        }
+
+                        if (url.startsWith("tez://upi/pay") || url.startsWith("intent://")) {
+                            finalUrl = when {
+                                url.startsWith("tez://upi/pay") -> url.replaceFirst("tez://upi/pay", "upi://pay")
+                                url.startsWith("intent://") -> url.replaceFirst("intent://", "upi://pay")
+                                else -> url
+                            }
+
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                data = Uri.parse(finalUrl)
+                                setPackage("com.google.android.apps.nbu.paisa.user")
+                                addCategory(Intent.CATEGORY_BROWSABLE)
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+
+                            val resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+                            if (resolveInfo != null) {
+                                reactContext.startActivity(intent)
+                            } else {
+                                showCustomToast(reactContext, "GPay app is not installed.")
+                            }
+                            return true
+                        }
+
+                        if (url.startsWith("upi://pay")) {
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                data = Uri.parse(finalUrl)
+                                addCategory(Intent.CATEGORY_BROWSABLE)
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            reactContext.startActivity(intent)
+                            return true
+                        }
+
+                        showCustomToast(reactContext, "No supported UPI app found.")
+                        return true
+
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        showCustomToast(reactContext, "UPI link failed: ${e.localizedMessage}")
+                        return true
+                    }
+                }
+
+                return false
+            }
+        }
 
         return webView
     }
 
-    // ReactProp to accept a URL and load it into the WebView
     @ReactProp(name = "source")
     fun setSource(webView: WebView, source: String?) {
-        println("HLLOOOOO")
-        println(source)
         source?.let {
-            webView.loadUrl(it) // Load the provided URL
+            webView.loadUrl(it)
         }
+    }
+
+    private fun showCustomToast(context: ThemedReactContext, message: String) {
+        val inflater = LayoutInflater.from(context)
+        val toastLayout: View = inflater.inflate(android.R.layout.simple_list_item_1, null)
+        val textView = toastLayout.findViewById<TextView>(android.R.id.text1)
+        textView.text = message
+ textView.setBackgroundColor(0xFF000000.toInt()) // Black background
+    textView.setTextColor(0xFFFFFFFF.toInt()) // White text
+    textView.setPadding(24, 16, 24, 16)
+        val toast = Toast(context)
+        toast.view = toastLayout
+        toast.duration = Toast.LENGTH_SHORT
+        toast.show()
     }
 }
